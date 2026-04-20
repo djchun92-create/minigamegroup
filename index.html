@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🎮 미니 게임 모음</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --dark: #1a1a2e;
+      --navy: #16213e;
+      --red: #e94560;
+      --accent: #64b5f6;
+      --green: #81c784;
+      --yellow: #ffd54f;
+      --purple: #ce93d8;
+    }
+
+    body {
+      background: var(--dark);
+      font-family: 'Segoe UI', sans-serif;
+      color: #eee;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .bg-grid {
+      position: fixed;
+      inset: 0;
+      display: grid;
+      grid-template-columns: repeat(20, 1fr);
+      grid-template-rows: repeat(12, 1fr);
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.06;
+    }
+    .bg-cell { border: 1px solid #e94560; }
+
+    header {
+      text-align: center;
+      padding: 60px 20px 40px;
+      position: relative;
+      z-index: 1;
+    }
+
+    header h1 {
+      font-size: clamp(2rem, 5vw, 3.5rem);
+      font-weight: 800;
+      letter-spacing: 3px;
+      color: #fff;
+    }
+
+    header h1 span { color: var(--red); }
+
+    header p {
+      margin-top: 12px;
+      font-size: 1.1rem;
+      color: #aaa;
+    }
+
+    .badge-row {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 20px;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      padding: 4px 14px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      border: 1px solid;
+    }
+
+    main {
+      flex: 1;
+      max-width: 1100px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 20px 20px 60px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .games-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 24px;
+    }
+
+    .game-card {
+      background: var(--navy);
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.07);
+      transition: transform 0.25s, box-shadow 0.25s;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .card-banner {
+      height: 140px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 5rem;
+      position: relative;
+    }
+
+    .card-banner::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, transparent 40%, var(--navy));
+    }
+
+    .card-body {
+      padding: 20px 24px 24px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .card-tag {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 12px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      margin-bottom: 10px;
+      align-self: flex-start;
+    }
+
+    .card-title {
+      font-size: 1.4rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: #fff;
+    }
+
+    .card-desc {
+      font-size: 0.9rem;
+      color: #999;
+      line-height: 1.6;
+      flex: 1;
+      margin-bottom: 20px;
+    }
+
+    .card-meta {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+    }
+
+    .meta-item { font-size: 0.8rem; color: #777; }
+
+    .play-btn {
+      display: block;
+      text-align: center;
+      padding: 12px;
+      border-radius: 10px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      text-decoration: none;
+      transition: opacity 0.2s, transform 0.15s;
+      color: #fff;
+    }
+
+    .play-btn:hover { opacity: 0.85; transform: scale(1.02); }
+
+    .theme-red   .card-banner { background: linear-gradient(135deg, #2d0a15, #5c1a2e); }
+    .theme-red   .card-tag    { background: rgba(233,69,96,0.2); color: var(--red); border: 1px solid var(--red); }
+    .theme-red   .play-btn    { background: var(--red); }
+    .theme-red:hover           { transform: translateY(-6px); box-shadow: 0 12px 40px rgba(233,69,96,0.25); }
+
+    .theme-green .card-banner { background: linear-gradient(135deg, #0a2d16, #1a5c2e); }
+    .theme-green .card-tag    { background: rgba(129,199,132,0.2); color: var(--green); border: 1px solid var(--green); }
+    .theme-green .play-btn    { background: #43a047; }
+    .theme-green:hover         { transform: translateY(-6px); box-shadow: 0 12px 40px rgba(129,199,132,0.25); }
+
+    .theme-yellow .card-banner { background: linear-gradient(135deg, #2d2000, #5c4500); }
+    .theme-yellow .card-tag    { background: rgba(255,213,79,0.2); color: var(--yellow); border: 1px solid var(--yellow); }
+    .theme-yellow .play-btn    { background: #f9a825; color: #111; }
+    .theme-yellow:hover          { transform: translateY(-6px); box-shadow: 0 12px 40px rgba(255,213,79,0.25); }
+
+    .theme-purple .card-banner { background: linear-gradient(135deg, #1a0a2d, #3a1a5c); }
+    .theme-purple .card-tag    { background: rgba(206,147,216,0.2); color: var(--purple); border: 1px solid var(--purple); }
+    .theme-purple .play-btn    { background: #8e24aa; }
+    .theme-purple:hover          { transform: translateY(-6px); box-shadow: 0 12px 40px rgba(206,147,216,0.25); }
+
+    .theme-blue .card-banner  { background: linear-gradient(135deg, #0a1a2d, #1a3a5c); }
+    .theme-blue .card-tag     { background: rgba(100,181,246,0.2); color: var(--accent); border: 1px solid var(--accent); }
+    .theme-blue .play-btn     { background: #1976d2; }
+    .theme-blue:hover           { transform: translateY(-6px); box-shadow: 0 12px 40px rgba(100,181,246,0.25); }
+
+    footer {
+      text-align: center;
+      padding: 24px;
+      color: #555;
+      font-size: 0.85rem;
+      border-top: 1px solid rgba(255,255,255,0.05);
+      position: relative;
+      z-index: 1;
+    }
+
+    @media (max-width: 640px) {
+      .games-grid { grid-template-columns: 1fr; }
+      header { padding: 40px 20px 30px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="bg-grid" id="bgGrid"></div>
+
+<header>
+  <h1>🎮 미니 <span>게임</span> 모음</h1>
+  <p>간단하고 재미있는 5가지 게임을 즐겨보세요</p>
+  <div class="badge-row">
+    <span class="badge" style="color:#e94560;border-color:#e94560">💣 지뢰찾기</span>
+    <span class="badge" style="color:#81c784;border-color:#81c784">🐍 뱀 게임</span>
+    <span class="badge" style="color:#ffd54f;border-color:#ffd54f">🔢 2048</span>
+    <span class="badge" style="color:#ce93d8;border-color:#ce93d8">🧩 테트리스</span>
+    <span class="badge" style="color:#64b5f6;border-color:#64b5f6">🃏 기억력 카드</span>
+  </div>
+</header>
+
+<main>
+  <div class="games-grid">
+
+    <div class="game-card theme-red">
+      <div class="card-banner">💣</div>
+      <div class="card-body">
+        <span class="card-tag">CLASSIC</span>
+        <h2 class="card-title">지뢰찾기</h2>
+        <p class="card-desc">숨겨진 지뢰를 피해 모든 안전한 칸을 열어내세요. 첫 클릭은 항상 안전합니다.</p>
+        <div class="card-meta">
+          <span class="meta-item">⚡ 초급 / 중급 / 고급</span>
+          <span class="meta-item">🖱 마우스</span>
+        </div>
+        <a href="minesweeper.html" class="play-btn">플레이 →</a>
+      </div>
+    </div>
+
+    <div class="game-card theme-green">
+      <div class="card-banner">🐍</div>
+      <div class="card-body">
+        <span class="card-tag">ARCADE</span>
+        <h2 class="card-title">뱀 게임</h2>
+        <p class="card-desc">방향키로 뱀을 조종해 먹이를 먹으세요. 벽이나 자신의 몸에 부딪히면 끝!</p>
+        <div class="card-meta">
+          <span class="meta-item">⚡ 점점 빨라짐</span>
+          <span class="meta-item">⌨ 방향키</span>
+        </div>
+        <a href="snake.html" class="play-btn">플레이 →</a>
+      </div>
+    </div>
+
+    <div class="game-card theme-yellow">
+      <div class="card-banner">🔢</div>
+      <div class="card-body">
+        <span class="card-tag">PUZZLE</span>
+        <h2 class="card-title">2048</h2>
+        <p class="card-desc">같은 숫자 타일을 합쳐 2048을 만들어보세요. 전략적인 사고가 필요합니다.</p>
+        <div class="card-meta">
+          <span class="meta-item">⚡ 4×4 그리드</span>
+          <span class="meta-item">⌨ 방향키 / 스와이프</span>
+        </div>
+        <a href="2048.html" class="play-btn">플레이 →</a>
+      </div>
+    </div>
+
+    <div class="game-card theme-purple">
+      <div class="card-banner">🧩</div>
+      <div class="card-body">
+        <span class="card-tag">CLASSIC</span>
+        <h2 class="card-title">테트리스</h2>
+        <p class="card-desc">떨어지는 블록을 쌓아 가로줄을 완성하세요. 줄이 꽉 차면 사라집니다!</p>
+        <div class="card-meta">
+          <span class="meta-item">⚡ 레벨 시스템</span>
+          <span class="meta-item">⌨ 방향키</span>
+        </div>
+        <a href="tetris.html" class="play-btn">플레이 →</a>
+      </div>
+    </div>
+
+    <div class="game-card theme-blue">
+      <div class="card-banner">🃏</div>
+      <div class="card-body">
+        <span class="card-tag">MEMORY</span>
+        <h2 class="card-title">기억력 카드</h2>
+        <p class="card-desc">뒤집힌 카드의 위치를 기억하고 같은 쌍을 찾아내세요. 최소 횟수에 도전!</p>
+        <div class="card-meta">
+          <span class="meta-item">⚡ 4×4 / 6×4</span>
+          <span class="meta-item">🖱 마우스</span>
+        </div>
+        <a href="memory.html" class="play-btn">플레이 →</a>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<footer>&copy; 2025 미니 게임 모음 · 5 Games Collection</footer>
+
+<script>
+  const grid = document.getElementById('bgGrid');
+  for (let i = 0; i < 240; i++) {
+    const c = document.createElement('div');
+    c.className = 'bg-cell';
+    if (Math.random() < 0.06) c.style.background = '#e94560';
+    grid.appendChild(c);
+  }
+</script>
+</body>
+</html>

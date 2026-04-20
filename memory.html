@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>기억력 카드</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #1a1a2e;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      font-family: 'Segoe UI', sans-serif;
+      color: #eee;
+    }
+
+    .home-btn {
+      position: fixed;
+      top: 14px;
+      left: 18px;
+      color: #aaa;
+      text-decoration: none;
+      font-size: 0.85rem;
+      background: rgba(15,52,96,0.7);
+      padding: 6px 14px;
+      border-radius: 20px;
+      border: 1px solid rgba(255,255,255,0.1);
+      transition: color 0.2s;
+      z-index: 100;
+    }
+    .home-btn:hover { color: #fff; }
+
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 12px;
+      color: #64b5f6;
+      letter-spacing: 2px;
+    }
+
+    .size-btns {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    .size-btns button {
+      padding: 5px 16px;
+      border: 2px solid #64b5f6;
+      background: transparent;
+      color: #64b5f6;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 0.82rem;
+      transition: all 0.2s;
+    }
+    .size-btns button:hover,
+    .size-btns button.active { background: #64b5f6; color: #1a1a2e; }
+
+    .status-bar {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      margin-bottom: 16px;
+    }
+    .stat { display: flex; align-items: center; gap: 6px; font-size: 1rem; }
+    #tries-val, #pairs-val { font-weight: 700; color: #64b5f6; }
+
+    .reset-btn {
+      padding: 6px 20px;
+      background: transparent;
+      border: 2px solid #64b5f6;
+      color: #64b5f6;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: all 0.2s;
+    }
+    .reset-btn:hover { background: #64b5f6; color: #1a1a2e; }
+
+    .grid {
+      display: grid;
+      gap: 10px;
+    }
+
+    .card {
+      width: 80px;
+      height: 80px;
+      cursor: pointer;
+      perspective: 600px;
+    }
+
+    .card-inner {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      transform-style: preserve-3d;
+      transition: transform 0.4s;
+      border-radius: 10px;
+    }
+
+    .card.flipped .card-inner { transform: rotateY(180deg); }
+
+    .card-front, .card-back {
+      position: absolute;
+      inset: 0;
+      border-radius: 10px;
+      backface-visibility: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+    }
+
+    .card-front {
+      background: #16213e;
+      border: 2px solid rgba(100,181,246,0.3);
+      color: #64b5f6;
+      font-size: 1.5rem;
+    }
+
+    .card-back {
+      background: #0f3460;
+      border: 2px solid #64b5f6;
+      transform: rotateY(180deg);
+    }
+
+    .card.matched .card-inner { transform: rotateY(180deg); }
+    .card.matched .card-back {
+      background: rgba(100,181,246,0.15);
+      border-color: #81c784;
+    }
+
+    .hint { margin-top: 14px; color: #555; font-size: 0.82rem; }
+
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.75);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 50;
+    }
+    .overlay.hidden { display: none; }
+    .overlay-box {
+      background: #16213e;
+      border: 2px solid #64b5f6;
+      border-radius: 16px;
+      padding: 36px 48px;
+      text-align: center;
+    }
+    .overlay-box h2 { font-size: 1.8rem; margin-bottom: 12px; color: #64b5f6; }
+    .overlay-box p  { color: #aaa; margin-bottom: 24px; }
+    .overlay-box button {
+      padding: 10px 32px;
+      background: #1976d2;
+      border: none;
+      border-radius: 24px;
+      color: #fff;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .overlay-box button:hover { opacity: 0.85; }
+  </style>
+</head>
+<body>
+
+<a href="index.html" class="home-btn">← 홈으로</a>
+
+<h1>🃏 기억력 카드</h1>
+
+<div class="size-btns">
+  <button onclick="setSize(4,4)" id="btn-4x4" class="active">4×4 (쉬움)</button>
+  <button onclick="setSize(6,4)" id="btn-6x4">6×4 (어려움)</button>
+</div>
+
+<div class="status-bar">
+  <div class="stat"><span>🔄</span><span id="tries-val">0</span></div>
+  <button class="reset-btn" onclick="newGame()">새 게임</button>
+  <div class="stat"><span>✅</span><span id="pairs-val">0</span> / <span id="total-val">8</span></div>
+</div>
+
+<div class="grid" id="grid"></div>
+<p class="hint">같은 이모지 쌍을 모두 찾아보세요!</p>
+
+<div class="overlay hidden" id="overlay">
+  <div class="overlay-box">
+    <h2>🎉 완료!</h2>
+    <p id="ov-msg"></p>
+    <button onclick="newGame(); document.getElementById('overlay').classList.add('hidden')">다시 하기</button>
+  </div>
+</div>
+
+<script>
+  const EMOJIS = ['🐶','🐱','🐻','🦊','🐼','🐸','🦁','🐯','🐺','🦄','🐙','🦋','🌈','🍎','🍕','🎸','🚀','⭐','🎯','🎮','🌸','🔥','💎','🎪'];
+
+  let cols = 4, rows = 4;
+  let cards = [], flipped = [], matched = 0, tries = 0, busy = false;
+
+  function setSize(c, r) {
+    cols = c; rows = r;
+    document.querySelectorAll('.size-btns button').forEach(b => b.classList.remove('active'));
+    document.getElementById(`btn-${c}x${r}`).classList.add('active');
+    newGame();
+  }
+
+  function newGame() {
+    const total = cols * rows;
+    const pairs = total / 2;
+    const pool = EMOJIS.slice(0, pairs);
+    const deck = [...pool, ...pool].sort(() => Math.random() - 0.5);
+
+    flipped = []; matched = 0; tries = 0; busy = false;
+    document.getElementById('tries-val').textContent = 0;
+    document.getElementById('pairs-val').textContent = 0;
+    document.getElementById('total-val').textContent = pairs;
+    document.getElementById('overlay').classList.add('hidden');
+
+    const grid = document.getElementById('grid');
+    grid.style.gridTemplateColumns = `repeat(${cols}, 80px)`;
+    grid.innerHTML = '';
+
+    cards = deck.map((emoji, i) => {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.innerHTML = `<div class="card-inner"><div class="card-front">?</div><div class="card-back">${emoji}</div></div>`;
+      card.dataset.emoji = emoji;
+      card.dataset.idx = i;
+      card.addEventListener('click', () => onCardClick(card));
+      grid.appendChild(card);
+      return card;
+    });
+  }
+
+  function onCardClick(card) {
+    if (busy || card.classList.contains('flipped') || card.classList.contains('matched')) return;
+    card.classList.add('flipped');
+    flipped.push(card);
+
+    if (flipped.length === 2) {
+      busy = true;
+      tries++;
+      document.getElementById('tries-val').textContent = tries;
+
+      if (flipped[0].dataset.emoji === flipped[1].dataset.emoji) {
+        flipped.forEach(c => c.classList.add('matched'));
+        matched++;
+        document.getElementById('pairs-val').textContent = matched;
+        flipped = [];
+        busy = false;
+
+        const total = cols * rows / 2;
+        if (matched === total) {
+          setTimeout(() => {
+            document.getElementById('ov-msg').textContent = `${tries}번 만에 모두 찾았어요!`;
+            document.getElementById('overlay').classList.remove('hidden');
+          }, 400);
+        }
+      } else {
+        setTimeout(() => {
+          flipped.forEach(c => c.classList.remove('flipped'));
+          flipped = [];
+          busy = false;
+        }, 900);
+      }
+    }
+  }
+
+  newGame();
+</script>
+</body>
+</html>
