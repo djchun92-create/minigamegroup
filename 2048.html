@@ -73,22 +73,33 @@
     }
     .new-btn:hover { background: #ffd54f; color: #1a1a2e; }
 
+    :root {
+      --tile: 100px;
+      --gap: 10px;
+      --pad: 10px;
+      --fs-lg: 2rem;
+      --fs-md: 1.5rem;
+      --fs-sm: 1.1rem;
+      --fs-xs: 1rem;
+    }
+
     .board-wrap {
       background: #0f3460;
       border-radius: 12px;
-      padding: 10px;
+      padding: var(--pad);
+      touch-action: none;
     }
 
     .board {
       display: grid;
-      grid-template-columns: repeat(4, 100px);
-      grid-template-rows: repeat(4, 100px);
-      gap: 10px;
+      grid-template-columns: repeat(4, var(--tile));
+      grid-template-rows: repeat(4, var(--tile));
+      gap: var(--gap);
     }
 
     .tile {
-      width: 100px;
-      height: 100px;
+      width: var(--tile);
+      height: var(--tile);
       border-radius: 8px;
       display: flex;
       align-items: center;
@@ -98,18 +109,18 @@
     }
 
     .tile-0    { background: rgba(255,255,255,0.06); }
-    .tile-2    { background: #eee4da; color: #776e65; font-size: 2rem; }
-    .tile-4    { background: #ede0c8; color: #776e65; font-size: 2rem; }
-    .tile-8    { background: #f2b179; color: #fff; font-size: 2rem; }
-    .tile-16   { background: #f59563; color: #fff; font-size: 2rem; }
-    .tile-32   { background: #f67c5f; color: #fff; font-size: 1.8rem; }
-    .tile-64   { background: #f65e3b; color: #fff; font-size: 1.8rem; }
-    .tile-128  { background: #edcf72; color: #fff; font-size: 1.5rem; }
-    .tile-256  { background: #edcc61; color: #fff; font-size: 1.5rem; }
-    .tile-512  { background: #edc850; color: #fff; font-size: 1.5rem; }
-    .tile-1024 { background: #edc53f; color: #fff; font-size: 1.1rem; }
-    .tile-2048 { background: #edc22e; color: #fff; font-size: 1.1rem; }
-    .tile-high { background: #3c3a32; color: #f9f6f2; font-size: 1rem; }
+    .tile-2    { background: #eee4da; color: #776e65; font-size: var(--fs-lg); }
+    .tile-4    { background: #ede0c8; color: #776e65; font-size: var(--fs-lg); }
+    .tile-8    { background: #f2b179; color: #fff;    font-size: var(--fs-lg); }
+    .tile-16   { background: #f59563; color: #fff;    font-size: var(--fs-lg); }
+    .tile-32   { background: #f67c5f; color: #fff;    font-size: var(--fs-md); }
+    .tile-64   { background: #f65e3b; color: #fff;    font-size: var(--fs-md); }
+    .tile-128  { background: #edcf72; color: #fff;    font-size: var(--fs-md); }
+    .tile-256  { background: #edcc61; color: #fff;    font-size: var(--fs-md); }
+    .tile-512  { background: #edc850; color: #fff;    font-size: var(--fs-md); }
+    .tile-1024 { background: #edc53f; color: #fff;    font-size: var(--fs-sm); }
+    .tile-2048 { background: #edc22e; color: #fff;    font-size: var(--fs-sm); }
+    .tile-high { background: #3c3a32; color: #f9f6f2; font-size: var(--fs-xs); }
 
     .tile.new { animation: pop 0.15s ease; }
     @keyframes pop { 0%{transform:scale(0.5)} 60%{transform:scale(1.08)} 100%{transform:scale(1)} }
@@ -132,11 +143,12 @@
       border-radius: 16px;
       padding: 36px 48px;
       text-align: center;
+      width: min(90vw, 360px);
     }
     .overlay-box h2 { font-size: 1.8rem; margin-bottom: 12px; color: #ffd54f; }
     .overlay-box p  { color: #aaa; margin-bottom: 24px; }
     .overlay-box button {
-      padding: 10px 32px;
+      padding: 12px 32px;
       background: #f9a825;
       border: none;
       border-radius: 24px;
@@ -144,13 +156,27 @@
       font-size: 1rem;
       font-weight: 700;
       cursor: pointer;
+      min-height: 48px;
     }
     .overlay-box button:hover { opacity: 0.85; }
 
     @media (max-width: 480px) {
-      .board { grid-template-columns: repeat(4, 72px); grid-template-rows: repeat(4, 72px); }
-      .tile { width: 72px; height: 72px; }
-      .tile-2, .tile-4, .tile-8, .tile-16 { font-size: 1.5rem; }
+      :root {
+        --tile: clamp(62px, calc((100vw - 60px) / 4), 100px);
+        --gap: 8px;
+        --pad: 8px;
+        --fs-lg: clamp(1.1rem, 5vw, 2rem);
+        --fs-md: clamp(0.95rem, 4vw, 1.5rem);
+        --fs-sm: clamp(0.8rem, 3.5vw, 1.1rem);
+        --fs-xs: clamp(0.7rem, 3vw, 1rem);
+      }
+      h1 { font-size: 1.8rem; }
+      .top-row { gap: 10px; }
+      .score-box { padding: 6px 12px; min-width: 65px; }
+      .score-box .val { font-size: 1.1rem; }
+      .new-btn { padding: 8px 14px; font-size: 0.8rem; }
+      .hint { display: none; }
+      .overlay-box { padding: 28px 24px; }
     }
   </style>
 </head>
@@ -309,14 +335,19 @@
   });
 
   let tx = 0, ty = 0;
-  document.addEventListener('touchstart', e => { tx = e.touches[0].clientX; ty = e.touches[0].clientY; }, { passive: true });
-  document.addEventListener('touchend', e => {
+  const boardWrap = document.querySelector('.board-wrap');
+  boardWrap.addEventListener('touchstart', e => {
+    tx = e.touches[0].clientX;
+    ty = e.touches[0].clientY;
+  }, { passive: false });
+  boardWrap.addEventListener('touchmove', e => { e.preventDefault(); }, { passive: false });
+  boardWrap.addEventListener('touchend', e => {
     const dx = e.changedTouches[0].clientX - tx;
     const dy = e.changedTouches[0].clientY - ty;
-    if (Math.abs(dx) < 20 && Math.abs(dy) < 20) return;
+    if (Math.abs(dx) < 15 && Math.abs(dy) < 15) return;
     if (Math.abs(dx) > Math.abs(dy)) move(dx > 0 ? 'right' : 'left');
     else move(dy > 0 ? 'down' : 'up');
-  }, { passive: true });
+  }, { passive: false });
 
   newGame();
 </script>
